@@ -40,6 +40,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
         exit;
     }
 }
+
+
+function getActivityCountByMonth() {
+    $conn = getConnection();
+    $activityCounts = array_fill(1, 12, 0); // Initialize an array to store activity counts for each month.
+
+    $sql = "SELECT date FROM acitivities"; // Replace 'your_table_name' with your actual table name.
+    $result = $conn->query($sql);
+
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $activityDate = new DateTime($row["date"]);
+            $month = $activityDate->format('n'); // Get the month (1-12) from the date.
+            $activityCounts[$month]++;
+        }
+    }
+
+    closeConnection($conn);
+
+    return $activityCounts;
+}
+
+$activityCounts = getActivityCountByMonth();
 ?>
 
 
@@ -76,6 +99,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.9.4/Chart.js"></script>
 
   <!-- Template Main CSS File -->
   <link href="assets/css/style.css" rel="stylesheet">
@@ -672,86 +696,50 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
             </div><!-- End Customers Card -->
 
             <!-- Reports -->
-            <div class="col-12">
-              <div class="card">
+            <div class="bar-graph">
+        <canvas id="activityBarChart" width="500" height="200"></canvas>
+    </div>
+    <script>
+        // Get the activity counts by month from PHP
+        var activityCounts = <?php echo json_encode($activityCounts); ?>;
 
-                <div class="filter">
-                  <a class="icon" href="#" data-bs-toggle="dropdown"><i class="bi bi-three-dots"></i></a>
-                  <ul class="dropdown-menu dropdown-menu-end dropdown-menu-arrow">
-                    <li class="dropdown-header text-start">
-                      <h6>Filter</h6>
-                    </li>
+        // Function to create the bar chart
+        function createActivityBarChart() {
+            var ctx = document.getElementById('activityBarChart').getContext('2d');
 
-                    <li><a class="dropdown-item" href="#">Today</a></li>
-                    <li><a class="dropdown-item" href="#">This Month</a></li>
-                    <li><a class="dropdown-item" href="#">This Year</a></li>
-                  </ul>
-                </div>
-
-                <div class="card-body">
-                  <h5 class="card-title">Reports <span>/Today</span></h5>
-
-                  <!-- Line Chart -->
-                  <div id="reportsChart"></div>
-
-                  <script>
-                    document.addEventListener("DOMContentLoaded", () => {
-                      new ApexCharts(document.querySelector("#reportsChart"), {
-                        series: [{
-                          name: 'Sales',
-                          data: [31, 40, 28, 51, 42, 82, 56],
-                        }, {
-                          name: 'Revenue',
-                          data: [11, 32, 45, 32, 34, 52, 41]
-                        }, {
-                          name: 'Customers',
-                          data: [15, 11, 32, 18, 9, 24, 11]
-                        }],
-                        chart: {
-                          height: 350,
-                          type: 'area',
-                          toolbar: {
-                            show: false
-                          },
+            var chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [{
+                        label: 'Activity Count',
+                        data: activityCounts,
+                        backgroundColor: 'blue',
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Activity Count'
+                            }
                         },
-                        markers: {
-                          size: 4
-                        },
-                        colors: ['#4154f1', '#2eca6a', '#ff771d'],
-                        fill: {
-                          type: "gradient",
-                          gradient: {
-                            shadeIntensity: 1,
-                            opacityFrom: 0.3,
-                            opacityTo: 0.4,
-                            stops: [0, 90, 100]
-                          }
-                        },
-                        dataLabels: {
-                          enabled: false
-                        },
-                        stroke: {
-                          curve: 'smooth',
-                          width: 2
-                        },
-                        xaxis: {
-                          type: 'datetime',
-                          categories: ["2018-09-19T00:00:00.000Z", "2018-09-19T01:30:00.000Z", "2018-09-19T02:30:00.000Z", "2018-09-19T03:30:00.000Z", "2018-09-19T04:30:00.000Z", "2018-09-19T05:30:00.000Z", "2018-09-19T06:30:00.000Z"]
-                        },
-                        tooltip: {
-                          x: {
-                            format: 'dd/MM/yy HH:mm'
-                          },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Month'
+                            }
                         }
-                      }).render();
-                    });
-                  </script>
-                  <!-- End Line Chart -->
+                    }
+                }
+            });
+        }
 
-                </div>
-
-              </div>
-            </div><!-- End Reports -->
+        // Call the function to create the chart
+        createActivityBarChart();
+    </script>
 
             <!-- Recent Sales -->
            <!--FOR THE TABLE TO DISPLAY THE USERS-->
