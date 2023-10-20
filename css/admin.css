@@ -20,7 +20,7 @@
 
 /* Style table headers (th) */
 .admin-table th {
-    background-color: #333;
+    background-color: rgb(1, 41, 112);
     color: #fff;
     text-align: center;
     padding: 10px;
@@ -67,7 +67,7 @@ h4{
     border-radius: 5px;
 }
 .delete-btn{
-    background-color: green;
+    background-color: rgb(65, 84, 241);
     color: white;
     border: none;
     padding: 8px;

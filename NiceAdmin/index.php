@@ -42,27 +42,24 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['action'])) {
 }
 
 
-function getActivityCountByMonth() {
-    $conn = getConnection();
-    $activityCounts = array_fill(1, 12, 0); // Initialize an array to store activity counts for each month.
+// Function to fetch activity data by month
+function getActivityDataByMonth() {
+  $conn = getConnection();
+  $activityData = array();
 
-    $sql = "SELECT date FROM acitivities"; // Replace 'your_table_name' with your actual table name.
-    $result = $conn->query($sql);
+  for ($month = 1; $month <= 12; $month++) {
+      $sql = "SELECT COUNT(*) AS activity_count FROM acitivities WHERE MONTH(date) = $month";
+      $result = $conn->query($sql);
+      $row = $result->fetch_assoc();
+      $activityData[$month] = $row['activity_count'];
+  }
 
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $activityDate = new DateTime($row["date"]);
-            $month = $activityDate->format('n'); // Get the month (1-12) from the date.
-            $activityCounts[$month]++;
-        }
-    }
+  closeConnection($conn);
 
-    closeConnection($conn);
-
-    return $activityCounts;
+  return $activityData;
 }
 
-$activityCounts = getActivityCountByMonth();
+$activityData = getActivityDataByMonth();
 ?>
 
 
@@ -286,7 +283,7 @@ $activityCounts = getActivityCountByMonth();
         <li class="nav-item dropdown pe-3">
 
           <a class="nav-link nav-profile d-flex align-items-center pe-0" href="#" data-bs-toggle="dropdown">
-            <img src="assets/img/profile-img.jpg" alt="Profile" class="rounded-circle">
+            <img src="assets/img/profile-image.jpg" alt="Profile" class="rounded-circle">
             <span class="d-none d-md-block dropdown-toggle ps-2">J. Martinez</span>
           </a><!-- End Profile Iamge Icon -->
 
@@ -696,50 +693,42 @@ $activityCounts = getActivityCountByMonth();
             </div><!-- End Customers Card -->
 
             <!-- Reports -->
-            <div class="bar-graph">
-        <canvas id="activityBarChart" width="500" height="200"></canvas>
-    </div>
-    <script>
-        // Get the activity counts by month from PHP
-        var activityCounts = <?php echo json_encode($activityCounts); ?>;
+           
+<div class="bar-graph">
+    <canvas id="activityChart" width="500" height="200"></canvas>
+</div>
+<script>
+    // Function to create the bar chart
+    function createActivityBarChart() {
+        var ctx = document.getElementById('activityChart').getContext('2d');
+        var activityData = <?php echo json_encode(array_values($activityData)); ?>;
+        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
-        // Function to create the bar chart
-        function createActivityBarChart() {
-            var ctx = document.getElementById('activityBarChart').getContext('2d');
-
-            var chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-                    datasets: [{
-                        label: 'Activity Count',
-                        data: activityCounts,
-                        backgroundColor: 'blue',
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: 'Activity Count'
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Month'
-                            }
-                        }
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: months,
+                datasets: [{
+                    label: 'Activities by Month',
+                    data: activityData,
+                    backgroundColor: 'skyblue',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
                     }
                 }
-            });
-        }
+            }
+        });
+    }
 
-        // Call the function to create the chart
-        createActivityBarChart();
-    </script>
+    // Call the function to create the chart
+    createActivityBarChart();
+</script>
+
 
             <!-- Recent Sales -->
            <!--FOR THE TABLE TO DISPLAY THE USERS-->
@@ -1052,7 +1041,7 @@ function getGenderDistribution() {
                 labels: ['Male', 'Female', 'Other'],
                 datasets: [{
                     data: [genderData['male'], genderData['female'], genderData['other']],
-                    backgroundColor: ['Green', 'Red', 'Yellow']
+                    backgroundColor: ['blue', 'Pink', 'violet']
                 }]
             },
             options: {
